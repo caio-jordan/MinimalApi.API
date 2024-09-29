@@ -9,6 +9,8 @@ namespace MinimalApi.API.Profiles
         public PratoProfile()
         {
             CreateMap<Prato, PratoDTO>().ReverseMap();
+            CreateMap<Prato, PratoParaCriacaoDTO>().ReverseMap();
+            CreateMap<Prato, PratoParaAtualizacaoDTO>().ReverseMap();
             CreateMap<Ingrediente, IngredienteDTO>().ForMember(
                 d => d.PratoId,                
                 o => o.MapFrom(s=>s.Pratos.First().Id)                

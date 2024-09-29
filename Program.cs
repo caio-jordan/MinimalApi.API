@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.API.DbContexts;
+using MinimalApi.API.Entities;
 using MinimalApi.API.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,12 +18,12 @@ var app = builder.Build();
 
 app.MapGet("/", () => "I'm Fine!");
 
-app.MapGet("/pratos", async Task<Results<NoContent, Ok<IEnumerable<PratoDTO>>>>
+app.MapGet("/pratos/{pratoNome}", async Task<Results<NoContent, Ok<IEnumerable<PratoDTO>>>>
  (PratoDbContext pratoDbContext,
  IMapper mapper,
- [FromQuery(Name = "name")] string? pratoNome) =>
+ string? pratoNome) =>
      {
-         var pratos = mapper.Map<IEnumerable<PratoDTO>>( await pratoDbContext.Pratos.Where(x => pratoNome == null || x.Nome.ToLower().Contains(pratoNome.ToLower())).ToListAsync());
+         var pratos = mapper.Map<IEnumerable<PratoDTO>>(await pratoDbContext.Pratos.Where(x => pratoNome == null || x.Nome.ToLower().Contains(pratoNome.ToLower())).ToListAsync());
 
          if (!pratos.Any())
          {
@@ -40,12 +41,64 @@ app.MapGet("/pratos/{pratosId:int}/ingredientes", async
     .FirstOrDefaultAsync(prato => prato.Id == pratosId))?.Ingredientes);
 });
 
-app.MapGet("/prato/{id:int}", async
+app.MapGet("/prato/{pratoId:int}", async
 (PratoDbContext pratoDbContext,
 IMapper mapper,
  int pratoId) =>
     {
         return mapper.Map<PratoDTO>(await pratoDbContext.Pratos.FirstOrDefaultAsync(x => x.Id == pratoId));
-    });
+    }).WithName("GetPratoByPratoId");
+
+
+
+app.MapPost("/prato", async Task<CreatedAtRoute<PratoDTO>>
+ (
+PratoDbContext pratoDbContext,
+IMapper mapper,
+PratoParaCriacaoDTO pratoParaCriacaoDTO
+) =>
+{
+    var prato = mapper.Map<Prato>(pratoParaCriacaoDTO);
+    pratoDbContext.Add(prato);
+    await pratoDbContext.SaveChangesAsync();
+    var pratoToReturn = mapper.Map<PratoDTO>(prato);
+
+    return TypedResults.CreatedAtRoute(pratoToReturn, "GetPratoByPratoId", new { pratoId = prato.Id });
+});
+
+app.MapPut("/prato/{pratoId:int}", async Task<Results<NotFound, Ok>>
+(PratoDbContext pratoDbContext,
+IMapper mapper,
+[FromBody] PratoParaAtualizacaoDTO pratoParaAtualizacaoDTO,
+ int pratoId) =>
+{
+
+    var prato = await pratoDbContext.Pratos.FirstOrDefaultAsync(x => x.Id == pratoId);
+    if (prato is null)
+        return TypedResults.NotFound();
+    
+
+    mapper.Map(pratoParaAtualizacaoDTO, prato);
+
+    await pratoDbContext.SaveChangesAsync();
+    return TypedResults.Ok();
+ });
+
+
+ app.MapDelete("/prato/{pratoId:int}", async Task<Results<NotFound, NoContent>>
+(PratoDbContext pratoDbContext,
+IMapper mapper,
+ int pratoId) =>
+{
+
+    var prato = await pratoDbContext.Pratos.FirstOrDefaultAsync(x => x.Id == pratoId);
+    if (prato is null)
+        return TypedResults.NotFound();
+    
+    pratoDbContext.Remove(prato);
+
+    await pratoDbContext.SaveChangesAsync();
+    return TypedResults.NoContent();
+ });
 
 app.Run();
