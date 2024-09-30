@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Routing;
+using MinimalApi.API.EndpointFilters;
 using MinimalApi.API.EndpointHandlers;
+using MinimalApi.API.Validations;
 
 namespace MinimalApi.API.Extensions
 {
@@ -9,16 +10,19 @@ namespace MinimalApi.API.Extensions
         {
             var pratosEndpoints = endpointRouteBuilder.MapGroup("/pratos");
             var pratosComIdEndpoints = pratosEndpoints.MapGroup("/{pratosId:int}");
+
+            var pratosComIdAndLockFilterEndpoints = endpointRouteBuilder.MapGroup("/pratos/{pratoId:int}")            
+            .AddEndpointFilter(new PratoIsLockedFilter(4))
+            .AddEndpointFilter(new PratoIsLockedFilter(3));
+
             pratosEndpoints.MapGet("", PratosHandlers.GetPratosAsync);
             pratosComIdEndpoints.MapGet("", PratosHandlers.GetPratosByIdAsync).WithName("GetPratos");
+            pratosEndpoints.MapPost("", PratosHandlers.PostPratosAync)
+            .AddEndpointFilter<ValidateAnotationFilter>();
 
-            pratosEndpoints.MapPost("", PratosHandlers.PostPratosAync);
-
-            pratosComIdEndpoints.MapPut("", PratosHandlers.PutPratosAsync);
-
-            pratosComIdEndpoints.MapDelete("", PratosHandlers.DeletePratosAsync);
-
-
+            pratosComIdAndLockFilterEndpoints.MapPut("", PratosHandlers.PutPratosAsync);
+            pratosComIdAndLockFilterEndpoints.MapDelete("", PratosHandlers.DeletePratosAsync)
+            .AddEndpointFilter<LogNotFoundResponseFilter>();
         }
         public static void RegistreIngredientesEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
         {           

@@ -13,6 +13,7 @@ namespace MinimalApi.API.EndpointHandlers
         public static async Task<Results<NoContent, Ok<IEnumerable<PratoDTO>>>> GetPratosAsync
         (PratoDbContext pratoDbContext,
         IMapper mapper,
+        ILogger<PratoDTO> logger,
         [FromQuery(Name = "nome")] string? pratoNome)
         {
             var pratos = mapper.Map<IEnumerable<PratoDTO>>(await pratoDbContext.Pratos
@@ -21,8 +22,10 @@ namespace MinimalApi.API.EndpointHandlers
 
             if (!pratos.Any())
             {
+                logger.LogInformation($"Prato nao encontrado, request: {pratoNome}");
                 return TypedResults.NoContent();
             }
+            logger.LogInformation($"Prato encontrado, request: {pratoNome}");
             return TypedResults.Ok(pratos);
         }
 

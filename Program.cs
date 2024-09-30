@@ -10,7 +10,14 @@ builder.Services.AddDbContext<PratoDbContext>(
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
+
+if  (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler();
+}
 
 app.RegistrePratosEndpoints();
 app.RegistreIngredientesEndpoints();
