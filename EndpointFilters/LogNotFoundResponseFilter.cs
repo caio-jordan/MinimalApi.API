@@ -9,7 +9,7 @@ namespace MinimalApi.API.EndpointFilters
             //LogInformartion with Endpoint Filter 
             var result = await next(context);
 
-            var actualResults = (result is INestedHttpResult result1) ? result1.Result: (IResult)result;
+            var actualResults = (result is INestedHttpResult result1) ? result1.Result: result as IResult;
 
             if (actualResults is IStatusCodeHttpResult {StatusCode: (int)HttpStatusCode.NotFound})
             logger.LogInformation($"Resource {context.HttpContext.Request.Path} was not found.");

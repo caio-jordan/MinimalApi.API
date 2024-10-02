@@ -8,15 +8,29 @@ namespace MinimalApi.API.Extensions
     {
         public static void RegistrePratosEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var pratosEndpoints = endpointRouteBuilder.MapGroup("/pratos");
-            var pratosComIdEndpoints = pratosEndpoints.MapGroup("/{pratosId:int}");
+            endpointRouteBuilder.MapGet("/rangos/{rangoId:int}", (int rangoId) => $"O prato {rangoId} é delicioso.")
+            .WithOpenApi(operation =>
+             { operation.Deprecated = true;
+               return operation;
+             })
+             .WithSummary("Este endpoint está deprecated e será desacontinuado na v2 desta API")
+             .WithDescription("Favor utilize a rota, /pratos/{pratosId} para evitar maiores transtornos futuros");
 
-            var pratosComIdAndLockFilterEndpoints = endpointRouteBuilder.MapGroup("/pratos/{pratoId:int}")            
+
+            var pratosEndpoints = endpointRouteBuilder.MapGroup("/pratos")
+            .RequireAuthorization();
+            var pratosComIdEndpoints = pratosEndpoints.MapGroup("/{pratoId:int}");
+            
+            var pratosComIdAndLockFilterEndpoints = endpointRouteBuilder.MapGroup("/pratos/{pratoId:int}")
+            //Adcioando a politica de admin do Brasil, dizendo que somente esse perfil pode atualizar ou deletar pratos do banco.
+            .RequireAuthorization("RequiredAdminFromBrazil")
+            .RequireAuthorization()
             .AddEndpointFilter(new PratoIsLockedFilter(4))
             .AddEndpointFilter(new PratoIsLockedFilter(3));
 
             pratosEndpoints.MapGet("", PratosHandlers.GetPratosAsync);
-            pratosComIdEndpoints.MapGet("", PratosHandlers.GetPratosByIdAsync).WithName("GetPratos");
+            pratosComIdEndpoints.MapGet("", PratosHandlers.GetPratosByIdAsync).WithName("GetPratosById")
+            .AllowAnonymous();
             pratosEndpoints.MapPost("", PratosHandlers.PostPratosAync)
             .AddEndpointFilter<ValidateAnotationFilter>();
 
@@ -26,7 +40,8 @@ namespace MinimalApi.API.Extensions
         }
         public static void RegistreIngredientesEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
         {           
-            var ingredientesEndpoints = endpointRouteBuilder.MapGroup("/pratos/{pratoId:int}/ingredientes");
+            var ingredientesEndpoints = endpointRouteBuilder.MapGroup("/pratos/{pratoId:int}/ingredientes")
+            .RequireAuthorization();
             ingredientesEndpoints.MapGet("", IngredientesHandlers.GetIngredientesAsync);
         }
     }

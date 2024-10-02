@@ -49,7 +49,7 @@ namespace MinimalApi.API.EndpointHandlers
             await pratoDbContext.SaveChangesAsync();
             var pratoToReturn = mapper.Map<PratoDTO>(prato);
 
-            return TypedResults.CreatedAtRoute(pratoToReturn, "GetPratos", new { pratoId = prato.Id });
+            return TypedResults.CreatedAtRoute(pratoToReturn, "GetPratosById", new { pratoId = prato.Id });
         }
 
         public static async Task<Results<NotFound, Ok>> PutPratosAsync
