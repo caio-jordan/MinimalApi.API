@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.API.Entities;
 
 namespace MinimalApi.API.DbContexts
 {
-    public class PratoDbContext(DbContextOptions<PratoDbContext> options) : DbContext(options)
+    public class PratoDbContext(DbContextOptions<PratoDbContext> options) : IdentityDbContext(options)
     {
         public DbSet<Prato> Pratos { get; set; } = null!;
         private DbSet<Ingrediente> Ingredientes { get; set;} = null!;

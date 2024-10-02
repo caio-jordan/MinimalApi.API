@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using MinimalApi.API.EndpointFilters;
 using MinimalApi.API.EndpointHandlers;
 using MinimalApi.API.Validations;
@@ -8,6 +9,9 @@ namespace MinimalApi.API.Extensions
     {
         public static void RegistrePratosEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
         {
+            endpointRouteBuilder.MapGroup("/identity/").MapIdentityApi<IdentityUser>();
+
+
             endpointRouteBuilder.MapGet("/rangos/{rangoId:int}", (int rangoId) => $"O prato {rangoId} é delicioso.")
             .WithOpenApi(operation =>
              { operation.Deprecated = true;
